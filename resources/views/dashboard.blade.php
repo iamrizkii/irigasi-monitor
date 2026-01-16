@@ -64,8 +64,9 @@
                             </span>
                         </div>
                         <div class="moisture-bar mb-3">
-                            <div class="moisture-bar-fill" id="petak{{ $petak['id'] }}-bar" style="width: {{ $petak['value'] }}%; 
-                                        background: var(--{{ App\Models\SensorReading::getMoistureColor($petak['value']) }})">
+                            <div class="moisture-bar-fill" id="petak{{ $petak['id'] }}-bar"
+                                style="width: {{ $petak['value'] }}%; 
+                                                background: var(--{{ App\Models\SensorReading::getMoistureColor($petak['value']) }})">
                             </div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
@@ -110,7 +111,7 @@
                     </h6>
                     <div class="water-level">
                         <div class="water-value" id="water-mid">
-                            {{ $latest->water_mid ?? '-' }}
+                            {{ isset($latest->water_mid) ? round($latest->water_mid) : '-' }}
                         </div>
                         <small class="text-secondary">cm dari sensor</small>
                     </div>
@@ -132,7 +133,7 @@
                     </h6>
                     <div class="water-level">
                         <div class="water-value" id="water-main">
-                            {{ $latest->water_main ?? '-' }}
+                            {{ isset($latest->water_main) ? round($latest->water_main) : '-' }}
                         </div>
                         <small class="text-secondary">cm dari sensor</small>
                     </div>
@@ -154,7 +155,7 @@
                     </h6>
                     <div class="water-level">
                         <div class="water-value" id="water-tank">
-                            {{ $latest->water_tank ?? '-' }}
+                            {{ isset($latest->water_tank) ? round($latest->water_tank) : '-' }}
                         </div>
                         <small class="text-secondary">cm dari sensor</small>
                     </div>
@@ -386,10 +387,10 @@
                         document.getElementById(`gate${i}-status`).className = `status-badge ${gate > 0 ? 'status-on' : 'status-off'}`;
                     }
 
-                    // Update water levels
-                    document.getElementById('water-mid').textContent = data.sensor.water_mid ?? '-';
-                    document.getElementById('water-main').textContent = data.sensor.water_main ?? '-';
-                    document.getElementById('water-tank').textContent = data.sensor.water_tank ?? '-';
+                    // Update water levels (rounded to whole numbers like LCD)
+                    document.getElementById('water-mid').textContent = data.sensor.water_mid != null ? Math.round(data.sensor.water_mid) : '-';
+                    document.getElementById('water-main').textContent = data.sensor.water_main != null ? Math.round(data.sensor.water_main) : '-';
+                    document.getElementById('water-tank').textContent = data.sensor.water_tank != null ? Math.round(data.sensor.water_tank) : '-';
 
                     // Update system status
                     document.getElementById('system-status').textContent = data.sensor.system_status;
@@ -456,11 +457,11 @@
             await fetchAPI('/api/alerts/read', 'POST', {});
             document.getElementById('alerts-count').textContent = '0';
             document.getElementById('alerts-container').innerHTML = `
-                <div class="text-center text-secondary py-4">
-                    <i class="fas fa-check-circle fa-2x mb-2"></i>
-                    <p class="mb-0">Tidak ada notifikasi baru</p>
-                </div>
-            `;
+                    <div class="text-center text-secondary py-4">
+                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                        <p class="mb-0">Tidak ada notifikasi baru</p>
+                    </div>
+                `;
         }
 
         // Initial update time

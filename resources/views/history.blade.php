@@ -66,9 +66,9 @@
                                                 {{ $reading->petak4_moisture }}%
                                             </span>
                                         </td>
-                                        <td>{{ $reading->water_mid ?? '-' }} cm</td>
-                                        <td>{{ $reading->water_main ?? '-' }} cm</td>
-                                        <td>{{ $reading->water_tank ?? '-' }} cm</td>
+                                        <td>{{ isset($reading->water_mid) ? round($reading->water_mid) : '-' }} cm</td>
+                                        <td>{{ isset($reading->water_main) ? round($reading->water_main) : '-' }} cm</td>
+                                        <td>{{ isset($reading->water_tank) ? round($reading->water_tank) : '-' }} cm</td>
                                         <td>
                                             <span class="badge {{ $reading->pump_status ? 'bg-success' : 'bg-secondary' }}">
                                                 {{ $reading->pump_status ? 'ON' : 'OFF' }}
