@@ -173,18 +173,38 @@ class ApiController extends Controller
             }
         }
 
-        // Check water tank level
-        if (isset($data['water_tank']) && $data['water_tank'] > 12) {
-            $recentAlert = Alert::where('type', 'water_low')
-                ->where('created_at', '>=', now()->subMinutes(30))
-                ->first();
+        // Check water tank level - sesuai kriteria tampilan
+        if (isset($data['water_tank'])) {
+            $tankLevel = round($data['water_tank']);
 
-            if (!$recentAlert) {
-                Alert::create([
-                    'type' => 'water_low',
-                    'message' => 'Level air tandon rendah!',
-                    'petak' => null,
-                ]);
+            // Alert untuk air rendah (7-10 cm)
+            if ($tankLevel >= 7 && $tankLevel <= 10) {
+                $recentAlert = Alert::where('type', 'water_low')
+                    ->where('created_at', '>=', now()->subMinutes(30))
+                    ->first();
+
+                if (!$recentAlert) {
+                    Alert::create([
+                        'type' => 'water_low',
+                        'message' => "Level air tandon rendah! Jarak: {$tankLevel} cm",
+                        'petak' => null,
+                    ]);
+                }
+            }
+
+            // Alert untuk perlu isi ulang (>10 cm)
+            if ($tankLevel > 10) {
+                $recentAlert = Alert::where('type', 'water_critical')
+                    ->where('created_at', '>=', now()->subMinutes(30))
+                    ->first();
+
+                if (!$recentAlert) {
+                    Alert::create([
+                        'type' => 'water_critical',
+                        'message' => "Tandon hampir kosong, segera isi ulang! Jarak: {$tankLevel} cm",
+                        'petak' => null,
+                    ]);
+                }
             }
         }
     }

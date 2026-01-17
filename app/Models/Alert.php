@@ -34,6 +34,7 @@ class Alert extends Model
             'drought' => 'fa-sun',
             'pump_error' => 'fa-exclamation-triangle',
             'water_low' => 'fa-tint-slash',
+            'water_critical' => 'fa-exclamation-circle',
             default => 'fa-info-circle',
         };
     }
@@ -46,7 +47,8 @@ class Alert extends Model
         return match ($this->type) {
             'drought' => 'danger',
             'pump_error' => 'warning',
-            'water_low' => 'info',
+            'water_low' => 'warning',
+            'water_critical' => 'danger',
             default => 'secondary',
         };
     }
