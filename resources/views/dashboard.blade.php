@@ -66,7 +66,7 @@
                         <div class="moisture-bar mb-3">
                             <div class="moisture-bar-fill" id="petak{{ $petak['id'] }}-bar"
                                 style="width: {{ $petak['value'] }}%; 
-                                                                background: var(--{{ App\Models\SensorReading::getMoistureColor($petak['value']) }})">
+                                                                                background: var(--{{ App\Models\SensorReading::getMoistureColor($petak['value']) }})">
                             </div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
@@ -404,6 +404,18 @@
         // Auto-refresh data every 5 seconds
         let currentSettings = @json($settings ?? ['mode' => 'auto', 'pump_command' => false]);
 
+        // Helper function for relative time
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return 'baru saja';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes} menit lalu`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours} jam lalu`;
+            const days = Math.floor(hours / 24);
+            return `${days} hari lalu`;
+        }
+
         async function refreshData() {
             try {
                 document.getElementById('refresh-indicator').style.display = 'block';
@@ -482,7 +494,58 @@
                     currentSettings = data.settings;
                 }
 
+                // Update alerts count and content
                 document.getElementById('alerts-count').textContent = data.alerts_count || 0;
+
+                // Update alert list content
+                const alertsContainer = document.getElementById('alerts-container');
+                if (data.alerts && data.alerts.length > 0) {
+                    let alertsHtml = '';
+                    data.alerts.forEach(alert => {
+                        const iconMap = {
+                            'drought': 'fa-sun',
+                            'pump_error': 'fa-exclamation-triangle',
+                            'water_low': 'fa-tint-slash',
+                            'water_critical': 'fa-exclamation-circle'
+                        };
+                        const colorMap = {
+                            'drought': 'danger',
+                            'pump_error': 'warning',
+                            'water_low': 'warning',
+                            'water_critical': 'danger'
+                        };
+                        const icon = iconMap[alert.type] || 'fa-info-circle';
+                        const color = colorMap[alert.type] || 'secondary';
+                        const timeAgo = getTimeAgo(new Date(alert.created_at));
+
+                        alertsHtml += `
+                                    <div class="alert-item ${alert.type === 'warning' ? 'alert-warning-item' : ''}">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <i class="fas ${icon} me-2 text-${color}"></i>
+                                                <strong>${alert.petak || 'Sistem'}</strong>
+                                            </div>
+                                            <small class="text-secondary">${timeAgo}</small>
+                                        </div>
+                                        <p class="mb-0 mt-1 small">${alert.message}</p>
+                                    </div>
+                                `;
+                    });
+                    alertsHtml += `
+                                <button class="btn btn-outline-secondary btn-sm w-100 mt-2" onclick="markAllRead()">
+                                    <i class="fas fa-check me-1"></i> Tandai Semua Dibaca
+                                </button>
+                            `;
+                    alertsContainer.innerHTML = alertsHtml;
+                } else {
+                    alertsContainer.innerHTML = `
+                                <div class="text-center text-secondary py-4">
+                                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                    <p class="mb-0">Tidak ada notifikasi baru</p>
+                                </div>
+                            `;
+                }
+
                 updateLastUpdateTime();
             } catch (error) {
                 console.error('Error refreshing data:', error);
@@ -538,11 +601,11 @@
             await fetchAPI('/api/alerts/read', 'POST', {});
             document.getElementById('alerts-count').textContent = '0';
             document.getElementById('alerts-container').innerHTML = `
-                            <div class="text-center text-secondary py-4">
-                                <i class="fas fa-check-circle fa-2x mb-2"></i>
-                                <p class="mb-0">Tidak ada notifikasi baru</p>
-                            </div>
-                        `;
+                                    <div class="text-center text-secondary py-4">
+                                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                        <p class="mb-0">Tidak ada notifikasi baru</p>
+                                    </div>
+                                `;
         }
 
         // Initial update time
