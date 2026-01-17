@@ -66,7 +66,7 @@
                         <div class="moisture-bar mb-3">
                             <div class="moisture-bar-fill" id="petak{{ $petak['id'] }}-bar"
                                 style="width: {{ $petak['value'] }}%; 
-                                                        background: var(--{{ App\Models\SensorReading::getMoistureColor($petak['value']) }})">
+                                                                background: var(--{{ App\Models\SensorReading::getMoistureColor($petak['value']) }})">
                             </div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
@@ -491,8 +491,11 @@
             }
         }
 
-        // Refresh every 5 seconds
-        setInterval(refreshData, 5000);
+        // Refresh every 3 seconds (lebih cepat agar sinkron dengan LCD)
+        setInterval(refreshData, 3000);
+
+        // Refresh langsung saat halaman load
+        refreshData();
 
         // Control functions
         async function setMode(mode) {
@@ -535,11 +538,11 @@
             await fetchAPI('/api/alerts/read', 'POST', {});
             document.getElementById('alerts-count').textContent = '0';
             document.getElementById('alerts-container').innerHTML = `
-                        <div class="text-center text-secondary py-4">
-                            <i class="fas fa-check-circle fa-2x mb-2"></i>
-                            <p class="mb-0">Tidak ada notifikasi baru</p>
-                        </div>
-                    `;
+                            <div class="text-center text-secondary py-4">
+                                <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                <p class="mb-0">Tidak ada notifikasi baru</p>
+                            </div>
+                        `;
         }
 
         // Initial update time
