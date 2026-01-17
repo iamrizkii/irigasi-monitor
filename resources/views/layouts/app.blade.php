@@ -164,6 +164,12 @@
             border: 1px solid #fca5a5;
         }
 
+        .status-warning {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #d97706;
+            border: 1px solid #fcd34d;
+        }
+
         .water-level {
             background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%);
             border-radius: 16px;

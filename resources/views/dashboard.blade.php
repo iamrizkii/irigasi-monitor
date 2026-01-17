@@ -66,7 +66,7 @@
                         <div class="moisture-bar mb-3">
                             <div class="moisture-bar-fill" id="petak{{ $petak['id'] }}-bar"
                                 style="width: {{ $petak['value'] }}%; 
-                                                background: var(--{{ App\Models\SensorReading::getMoistureColor($petak['value']) }})">
+                                                        background: var(--{{ App\Models\SensorReading::getMoistureColor($petak['value']) }})">
                             </div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
@@ -116,8 +116,21 @@
                         <small class="text-secondary">cm dari sensor</small>
                     </div>
                     <div class="text-center mt-2">
-                        <span class="status-badge {{ ($latest->water_mid ?? 999) <= 7 ? 'status-on' : 'status-off' }}">
-                            {{ ($latest->water_mid ?? 999) <= 7 ? 'Air Tersedia' : 'Air Rendah' }}
+                        @php
+                            $midLevel = $latest->water_mid ?? 999;
+                            if ($midLevel >= 1 && $midLevel <= 3) {
+                                $midStatus = 'Air Tinggi';
+                                $midClass = 'status-on';
+                            } elseif ($midLevel >= 4 && $midLevel <= 6) {
+                                $midStatus = 'Air Sedang';
+                                $midClass = 'status-warning';
+                            } else {
+                                $midStatus = 'Air Rendah';
+                                $midClass = 'status-off';
+                            }
+                        @endphp
+                        <span class="status-badge {{ $midClass }}" id="water-mid-status">
+                            {{ $midStatus }}
                         </span>
                     </div>
                 </div>
@@ -138,8 +151,21 @@
                         <small class="text-secondary">cm dari sensor</small>
                     </div>
                     <div class="text-center mt-2">
-                        <span class="status-badge {{ ($latest->water_main ?? 999) <= 7 ? 'status-on' : 'status-off' }}">
-                            {{ ($latest->water_main ?? 999) <= 7 ? 'Air Tersedia' : 'Air Rendah' }}
+                        @php
+                            $mainLevel = $latest->water_main ?? 999;
+                            if ($mainLevel >= 1 && $mainLevel <= 3) {
+                                $mainStatus = 'Air Tinggi';
+                                $mainClass = 'status-on';
+                            } elseif ($mainLevel >= 4 && $mainLevel <= 6) {
+                                $mainStatus = 'Air Sedang';
+                                $mainClass = 'status-warning';
+                            } else {
+                                $mainStatus = 'Air Rendah';
+                                $mainClass = 'status-off';
+                            }
+                        @endphp
+                        <span class="status-badge {{ $mainClass }}" id="water-main-status">
+                            {{ $mainStatus }}
                         </span>
                     </div>
                 </div>
@@ -160,8 +186,24 @@
                         <small class="text-secondary">cm dari sensor</small>
                     </div>
                     <div class="text-center mt-2">
-                        <span class="status-badge {{ ($latest->water_tank ?? 999) <= 12 ? 'status-on' : 'status-off' }}">
-                            {{ ($latest->water_tank ?? 999) <= 12 ? 'Aman' : 'Perlu Isi Ulang' }}
+                        @php
+                            $tankLevel = $latest->water_tank ?? 999;
+                            if ($tankLevel >= 1 && $tankLevel <= 3) {
+                                $tankStatus = 'Air Tinggi';
+                                $tankClass = 'status-on';
+                            } elseif ($tankLevel >= 4 && $tankLevel <= 6) {
+                                $tankStatus = 'Air Sedang';
+                                $tankClass = 'status-warning';
+                            } elseif ($tankLevel >= 7 && $tankLevel <= 10) {
+                                $tankStatus = 'Air Rendah';
+                                $tankClass = 'status-off';
+                            } else {
+                                $tankStatus = 'Perlu Isi Ulang';
+                                $tankClass = 'status-off';
+                            }
+                        @endphp
+                        <span class="status-badge {{ $tankClass }}" id="water-tank-status">
+                            {{ $tankStatus }}
                         </span>
                     </div>
                 </div>
@@ -388,9 +430,45 @@
                     }
 
                     // Update water levels (rounded to whole numbers like LCD)
-                    document.getElementById('water-mid').textContent = data.sensor.water_mid != null ? Math.round(data.sensor.water_mid) : '-';
-                    document.getElementById('water-main').textContent = data.sensor.water_main != null ? Math.round(data.sensor.water_main) : '-';
-                    document.getElementById('water-tank').textContent = data.sensor.water_tank != null ? Math.round(data.sensor.water_tank) : '-';
+                    const waterMid = data.sensor.water_mid != null ? Math.round(data.sensor.water_mid) : null;
+                    const waterMain = data.sensor.water_main != null ? Math.round(data.sensor.water_main) : null;
+                    const waterTank = data.sensor.water_tank != null ? Math.round(data.sensor.water_tank) : null;
+
+                    document.getElementById('water-mid').textContent = waterMid ?? '-';
+                    document.getElementById('water-main').textContent = waterMain ?? '-';
+                    document.getElementById('water-tank').textContent = waterTank ?? '-';
+
+                    // Update water level status badges
+                    function getWaterStatus(level) {
+                        if (level >= 1 && level <= 3) return { text: 'Air Tinggi', class: 'status-on' };
+                        if (level >= 4 && level <= 6) return { text: 'Air Sedang', class: 'status-warning' };
+                        return { text: 'Air Rendah', class: 'status-off' };
+                    }
+
+                    function getTankStatus(level) {
+                        if (level >= 1 && level <= 3) return { text: 'Air Tinggi', class: 'status-on' };
+                        if (level >= 4 && level <= 6) return { text: 'Air Sedang', class: 'status-warning' };
+                        if (level >= 7 && level <= 10) return { text: 'Air Rendah', class: 'status-off' };
+                        return { text: 'Perlu Isi Ulang', class: 'status-off' };
+                    }
+
+                    if (waterMid != null) {
+                        const midStatus = getWaterStatus(waterMid);
+                        document.getElementById('water-mid-status').textContent = midStatus.text;
+                        document.getElementById('water-mid-status').className = 'status-badge ' + midStatus.class;
+                    }
+
+                    if (waterMain != null) {
+                        const mainStatus = getWaterStatus(waterMain);
+                        document.getElementById('water-main-status').textContent = mainStatus.text;
+                        document.getElementById('water-main-status').className = 'status-badge ' + mainStatus.class;
+                    }
+
+                    if (waterTank != null) {
+                        const tankStatus = getTankStatus(waterTank);
+                        document.getElementById('water-tank-status').textContent = tankStatus.text;
+                        document.getElementById('water-tank-status').className = 'status-badge ' + tankStatus.class;
+                    }
 
                     // Update system status
                     document.getElementById('system-status').textContent = data.sensor.system_status;
@@ -457,11 +535,11 @@
             await fetchAPI('/api/alerts/read', 'POST', {});
             document.getElementById('alerts-count').textContent = '0';
             document.getElementById('alerts-container').innerHTML = `
-                    <div class="text-center text-secondary py-4">
-                        <i class="fas fa-check-circle fa-2x mb-2"></i>
-                        <p class="mb-0">Tidak ada notifikasi baru</p>
-                    </div>
-                `;
+                        <div class="text-center text-secondary py-4">
+                            <i class="fas fa-check-circle fa-2x mb-2"></i>
+                            <p class="mb-0">Tidak ada notifikasi baru</p>
+                        </div>
+                    `;
         }
 
         // Initial update time
